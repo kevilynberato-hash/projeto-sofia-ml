@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Como Funciona o Modelo ML — Handoff Sofia</title>
+<style>
+  :root { color-scheme: light; --red: #EA1D2C; --green: #00B894; --blue: #0984E3; --purple: #6C5CE7; --orange: #E17055; --gray: #636E72; --dark: #2D3436; --bg: #F5F6FA; --card: #FFFFFF; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--dark); line-height: 1.7; }
+
+  /* NAV */
+  .nav { position: sticky; top: 0; background: white; border-bottom: 1px solid #dfe6e9; padding: 10px 40px; display: flex; gap: 16px; z-index: 100; overflow-x: auto; flex-wrap: nowrap; }
+  .nav a { font-size: 12px; font-weight: 600; color: var(--gray); text-decoration: none; padding: 6px 14px; border-radius: 20px; white-space: nowrap; transition: all 0.2s; }
+  .nav a:hover, .nav a.active { background: var(--red); color: white; }
+
+  /* HEADER */
+  .header { background: linear-gradient(135deg, #EA1D2C 0%, #B71525 100%); color: white; padding: 48px 40px 40px; }
+  .header h1 { font-size: 28px; font-weight: 800; margin-bottom: 8px; }
+  .header .sub { font-size: 15px; opacity: 0.9; max-width: 700px; line-height: 1.6; }
+  .header .meta { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
+  .header .meta span { background: rgba(255,255,255,0.2); padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 32px 40px 60px; }
+
+  /* SECTIONS */
+  .section { margin-bottom: 40px; scroll-margin-top: 60px; }
+  .section-title { font-size: 20px; font-weight: 800; color: var(--dark); margin-bottom: 6px; padding-left: 14px; border-left: 4px solid var(--red); }
+  .section-desc { font-size: 14px; color: var(--gray); margin-bottom: 20px; padding-left: 14px; }
+
+  /* CARDS */
+  .card { background: var(--card); border-radius: 14px; padding: 24px 28px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 20px; }
+  .card h3 { font-size: 16px; font-weight: 700; margin-bottom: 12px; }
+  .card p { font-size: 14px; color: var(--dark); margin-bottom: 10px; }
+  .card .muted { color: var(--gray); }
+
+  /* CALLOUT */
+  .callout { border-radius: 10px; padding: 16px 20px; margin: 16px 0; font-size: 13px; display: flex; align-items: flex-start; gap: 10px; }
+  .callout.green { background: #F0FFF4; border: 1px solid #C6F6D5; }
+  .callout.yellow { background: #FFF9E6; border: 1px solid #FDCB6E; }
+  .callout.red { background: #FFF5F5; border: 1px solid #FEB2B2; }
+  .callout.blue { background: #EBF5FF; border: 1px solid #BEE3F8; }
+  .callout .icon { font-size: 20px; flex-shrink: 0; }
+
+  /* FEATURE TABLE */
+  .feat-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+  .feat-item { background: white; border-radius: 10px; padding: 16px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); border-left: 4px solid var(--blue); }
+  .feat-item.engage { border-left-color: var(--green); }
+  .feat-item.intent { border-left-color: var(--blue); }
+  .feat-item.funnel { border-left-color: var(--purple); }
+  .feat-item.block { border-left-color: var(--orange); }
+  .feat-item.lead { border-left-color: var(--gray); }
+  .feat-item .feat-name { font-family: 'Courier New', monospace; font-size: 13px; font-weight: 700; color: var(--dark); background: #F5F6FA; display: inline-block; padding: 2px 8px; border-radius: 4px; margin-bottom: 6px; }
+  .feat-item .feat-what { font-size: 13px; color: var(--dark); margin-bottom: 4px; }
+  .feat-item .feat-why { font-size: 12px; color: var(--gray); }
+  .feat-item .feat-behavior { font-size: 12px; color: var(--dark); background: #FAFAFA; border-radius: 6px; padding: 8px 12px; margin-top: 8px; }
+  .feat-item .feat-behavior strong { color: var(--green); }
+  .feat-item .feat-behavior .low { color: var(--orange); }
+
+  /* GRID 2 COL */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 768px) { .grid2 { grid-template-columns: 1fr; } }
+
+  /* FLOW VERTICAL */
+  .vflow { display: flex; flex-direction: column; align-items: center; gap: 0; }
+  .vflow-node { border-radius: 12px; padding: 18px 28px; text-align: center; font-size: 14px; font-weight: 600; max-width: 460px; width: 100%; }
+  .vflow-arrow { width: 2px; height: 28px; background: #B2BEC3; position: relative; }
+  .vflow-arrow::after { content: ''; position: absolute; bottom: -5px; left: -5px; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 7px solid #B2BEC3; }
+  .vflow-detail { font-size: 12px; font-weight: 400; margin-top: 4px; opacity: 0.85; }
+  .vflow-split { display: flex; gap: 20px; width: 100%; max-width: 700px; }
+  .vflow-branch { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .vflow-branch-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+
+  /* ANALOGY BOX */
+  .analogy { background: white; border: 2px solid var(--purple); border-radius: 14px; padding: 24px; margin-bottom: 20px; }
+  .analogy h4 { color: var(--purple); font-size: 15px; margin-bottom: 8px; }
+  .analogy p { font-size: 14px; }
+
+  /* CATEGORY HEADER */
+  .cat-header { display: flex; align-items: center; gap: 12px; margin: 28px 0 16px; }
+  .cat-dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+  .cat-label { font-size: 15px; font-weight: 700; }
+  .cat-count { font-size: 12px; color: var(--gray); font-weight: 500; }
+
+  /* KPI MINI */
+  .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .kpi { background: white; border-radius: 10px; padding: 16px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .kpi .num { font-size: 28px; font-weight: 800; }
+  .kpi .lbl { font-size: 11px; color: var(--gray); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+
+  /* THRESHOLD VISUAL */
+  .threshold-visual { background: white; border-radius: 14px; padding: 28px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 20px; }
+  .score-bar { display: flex; height: 48px; border-radius: 10px; overflow: hidden; margin: 16px 0; position: relative; }
+  .score-bar .seg { display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: white; }
+  .score-marker { position: absolute; top: -8px; height: calc(100% + 16px); width: 3px; background: var(--dark); border-radius: 2px; }
+  .score-marker-label { position: absolute; top: -26px; transform: translateX(-50%); font-size: 11px; font-weight: 700; white-space: nowrap; }
+
+  /* TOC */
+  .toc { background: white; border-radius: 14px; padding: 24px 28px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 32px; }
+  .toc h3 { font-size: 15px; font-weight: 700; margin-bottom: 12px; color: var(--dark); }
+  .toc ol { padding-left: 20px; }
+  .toc li { font-size: 14px; margin-bottom: 6px; }
+  .toc a { color: var(--red); text-decoration: none; font-weight: 600; }
+  .toc a:hover { text-decoration: underline; }
+
+  .highlight { background: #FFEAA7; padding: 2px 6px; border-radius: 4px; font-weight: 700; }
+  .tag { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; }
+
+  .footer { text-align: center; font-size: 11px; color: #B2BEC3; margin-top: 40px; padding-top: 16px; border-top: 1px solid #DFE6E9; }
+
+  /* TOGGLE/ACCORDION */
+  details { margin-bottom: 8px; }
+  details summary { cursor: pointer; font-size: 14px; font-weight: 600; color: var(--dark); padding: 10px 16px; background: #F5F6FA; border-radius: 8px; list-style: none; display: flex; align-items: center; gap: 8px; }
+  details summary::before { content: '\25B6'; font-size: 10px; transition: transform 0.2s; }
+  details[open] summary::before { transform: rotate(90deg); }
+  details .detail-content { padding: 12px 16px; font-size: 13px; line-height: 1.7; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<div class="nav">
+  <a href="#intro">Visao Geral</a>
+  <a href="#analogia">Analogia</a>
+  <a href="#algoritmo">Algoritmo</a>
+  <a href="#features">Features</a>
+  <a href="#maturidade">Alta Maturidade</a>
+  <a href="#threshold">Threshold</a>
+  <a href="#fluxo">Fluxo Completo</a>
+  <a href="#resultados">Resultados</a>
+  <a href="#proximos">Proximos Passos</a>
+</div>
+
+<!-- HEADER -->
+<div class="header">
+  <h1>Como Funciona o Modelo de Machine Learning</h1>
+  <div class="sub">Documento tecnico para o time de Produto — explica o que o modelo faz, como cada variavel influencia a decisao, como definimos "alta maturidade" e o fluxo completo do represamento inteligente.</div>
+  <div class="meta">
+    <span>Handoff Sofia ML v9</span>
+    <span>LightGBM</span>
+    <span>38 features</span>
+    <span>AUC 0.895</span>
+    <span>Kevilyn | Junho 2026</span>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- TOC -->
+<div class="toc">
+  <h3>Indice do Documento</h3>
+  <ol>
+    <li><a href="#intro">Visao Geral — O que o modelo faz e por que ele existe</a></li>
+    <li><a href="#analogia">Analogia para entender ML</a></li>
+    <li><a href="#algoritmo">O Algoritmo: LightGBM</a></li>
+    <li><a href="#features">As 38 Features — O que o modelo enxerga</a></li>
+    <li><a href="#maturidade">Como definimos "Alta Maturidade"</a></li>
+    <li><a href="#threshold">Threshold — O ponto de corte</a></li>
+    <li><a href="#fluxo">Fluxo Completo do Represamento Inteligente</a></li>
+    <li><a href="#resultados">Resultados do Backtest</a></li>
+    <li><a href="#proximos">O que precisa do time de Produto</a></li>
+  </ol>
+</div>
+
+<!-- ============================================================ -->
+<!-- 1. VISAO GERAL -->
+<!-- ============================================================ -->
+<div class="section" id="intro">
+  <div class="section-title">1. Visao Geral — O que o modelo faz</div>
+  <div class="section-desc">Objetivo, problema e solucao proposta</div>
+
+  <div class="card">
+    <h3>O Problema</h3>
+    <p>Hoje, todos os leads que entram na esteira do Anota Ai ficam <strong>24 horas represados com a Sofia</strong> (nosso bot de atendimento) e depois sao <strong>automaticamente enviados para o time comercial</strong> — sem distincao. Isso significa que:</p>
+    <p class="muted">1. Leads que <strong>converteriam sozinhos</strong> (Self) recebem executivo desnecessariamente, consumindo capacidade comercial.</p>
+    <p class="muted">2. Leads que <strong>precisam de ajuda humana</strong> esperam 24h ate receber atencao de um executivo.</p>
+    <p>Resultado: <strong>share self de ~61%</strong> — ou seja, 61% das conversoes acontecem sem executivo, mas todos os leads passam pelo comercial mesmo assim.</p>
+  </div>
+
+  <div class="card">
+    <h3>A Solucao: Represamento Inteligente</h3>
+    <p>O modelo de ML analisa <strong>38 variaveis</strong> de cada lead (comportamento no chat, perfil, engajamento) e atribui um <strong>score de 0 a 1</strong>.</p>
+    <p>Com base nesse score, o modelo decide:</p>
+    <div style="display:flex;gap:16px;margin-top:12px">
+      <div style="flex:1;background:#F0FFF4;border:2px solid #00B894;border-radius:10px;padding:16px;text-align:center">
+        <div style="font-size:13px;font-weight:700;color:#00B894">SCORE ALTO</div>
+        <div style="font-size:20px;font-weight:800;color:#00B894;margin:8px 0">REPRESADO</div>
+        <div style="font-size:12px;color:#636E72">Lead fica sem executivo ate dia 4. Maior chance de converter por Self ou Sofia.</div>
+      </div>
+      <div style="flex:1;background:#FFF5F5;border:2px solid #E17055;border-radius:10px;padding:16px;text-align:center">
+        <div style="font-size:13px;font-weight:700;color:#E17055">SCORE BAIXO</div>
+        <div style="font-size:20px;font-weight:800;color:#E17055;margin:8px 0">TRANSBORDO</div>
+        <div style="font-size:12px;color:#636E72">Lead vai pro comercial no dia 1. Precisa de atencao humana para converter.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout red">
+    <span class="icon">&#9888;</span>
+    <div><strong>Regra de narrativa critica:</strong> O modelo identifica <strong>leads com alta maturidade para converter sem executivo</strong>. A taxa de 22.6% e do <strong>grupo represado</strong>, nao da Sofia. A Sofia tem ~2% de conversao direta. "Self" = lead converteu sozinho ou com ajuda parcial da Sofia, sem executivo tocar.</div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 2. ANALOGIA -->
+<!-- ============================================================ -->
+<div class="section" id="analogia">
+  <div class="section-title">2. Analogia para entender ML</div>
+  <div class="section-desc">Uma forma simples de pensar no que o modelo faz</div>
+
+  <div class="analogy">
+    <h4>Pense em uma triagem de hospital</h4>
+    <p>Quando um paciente chega no pronto-socorro, o enfermeiro da triagem avalia varios sinais (pressao, temperatura, dor, historico) e classifica a urgencia: <strong>verde</strong> (pode esperar), <strong>amarelo</strong> (precisa de atencao) ou <strong>vermelho</strong> (precisa de medico agora).</p>
+    <p style="margin-top:10px">O modelo faz algo parecido com leads:</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px">
+      <div style="background:#F0FFF4;border-radius:8px;padding:14px">
+        <div style="font-size:13px;font-weight:700;color:#00B894">Lead "verde" (score alto)</div>
+        <div style="font-size:12px;color:#636E72;margin-top:4px">Engajou bem com a Sofia, respondeu perguntas, nao pediu humano, tem perfil compativel. <strong>Consegue converter sozinho</strong> — nao precisa de executivo agora.</div>
+      </div>
+      <div style="background:#FFF5F5;border-radius:8px;padding:14px">
+        <div style="font-size:13px;font-weight:700;color:#E17055">Lead "vermelho" (score baixo)</div>
+        <div style="font-size:12px;color:#636E72;margin-top:4px">Nao engajou, pediu humano, levantou objecoes, Sofia nao conseguiu resolver. <strong>Precisa de executivo humano</strong> para ter chance de converter.</div>
+      </div>
+    </div>
+    <p style="margin-top:16px;font-size:13px;color:#636E72">A diferenca e que o "enfermeiro" aqui e um algoritmo que analisa <strong>38 sinais ao mesmo tempo</strong>, cruza todos entre si e atribui uma probabilidade numerica — algo que um humano nao conseguiria fazer para milhares de leads por dia.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 3. ALGORITMO -->
+<!-- ============================================================ -->
+<div class="section" id="algoritmo">
+  <div class="section-title">3. O Algoritmo: LightGBM</div>
+  <div class="section-desc">Que tipo de ML estamos usando e por que</div>
+
+  <div class="card">
+    <h3>O que e LightGBM?</h3>
+    <p><strong>LightGBM</strong> (Light Gradient Boosting Machine) e um algoritmo de Machine Learning criado pela Microsoft, amplamente usado na industria. E o <strong>mesmo tipo de algoritmo</strong> usado pelo time do Yuri Laranja no modelo Diana (alocacao inteligente do iFood para restaurantes).</p>
+    <p style="margin-top:10px">De forma simplificada, ele funciona assim:</p>
+  </div>
+
+  <div class="grid2">
+    <div class="card" style="border-top:4px solid var(--blue)">
+      <h3>Como funciona (sem formulas)</h3>
+      <p><strong>1. Arvores de decisao:</strong> O modelo cria centenas de "perguntas sim/nao" encadeadas. Exemplo: <em>"O lead mandou mais de 5 mensagens? Se sim, ele perguntou sobre preco? Se sim..."</em></p>
+      <p><strong>2. Boosting:</strong> Cada nova arvore tenta corrigir os erros da anterior. E um processo iterativo — o modelo "aprende" com seus proprios erros.</p>
+      <p><strong>3. Resultado:</strong> A combinacao de todas as arvores gera um score final entre 0 e 1 para cada lead.</p>
+    </div>
+
+    <div class="card" style="border-top:4px solid var(--purple)">
+      <h3>Por que LightGBM?</h3>
+      <p><strong>Velocidade:</strong> Processa milhares de leads em segundos — essencial para inferencia diaria.</p>
+      <p><strong>Precisao:</strong> Consistentemente top em benchmarks de dados tabulares (nosso caso — tabela com linhas e colunas).</p>
+      <p><strong>Interpretabilidade:</strong> Mostra quais features sao mais importantes, facilitando a explicacao do modelo.</p>
+      <p><strong>Referencia interna:</strong> Mesmo algoritmo do modelo Diana (Yuri Laranja, iFood). Padrao ja validado na empresa.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Dados de treino e validacao</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:8px">
+      <div style="background:#F5F6FA;border-radius:8px;padding:14px;text-align:center">
+        <div style="font-size:24px;font-weight:800;color:var(--dark)">10.131</div>
+        <div style="font-size:12px;color:var(--gray)">leads unicos (Mar-Jun 2026)</div>
+      </div>
+      <div style="background:#F5F6FA;border-radius:8px;padding:14px;text-align:center">
+        <div style="font-size:24px;font-weight:800;color:var(--dark)">113.749</div>
+        <div style="font-size:12px;color:var(--gray)">linhas (1 por lead por dia)</div>
+      </div>
+      <div style="background:#F5F6FA;border-radius:8px;padding:14px;text-align:center">
+        <div style="font-size:24px;font-weight:800;color:var(--dark)">38</div>
+        <div style="font-size:12px;color:var(--gray)">features (variaveis)</div>
+      </div>
+    </div>
+    <div class="callout blue" style="margin-top:16px">
+      <span class="icon">&#128269;</span>
+      <div><strong>Validacao temporal (out-of-time):</strong> Treinamos nos meses 1-2 e testamos no mes 3 — dados que o modelo <strong>nunca viu</strong> durante o treino. Isso garante que o modelo generaliza e nao apenas "decorou" os dados.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 4. FEATURES -->
+<!-- ============================================================ -->
+<div class="section" id="features">
+  <div class="section-title">4. As 38 Features — O que o modelo enxerga</div>
+  <div class="section-desc">Cada variavel que o modelo usa, o que ela significa, e como influencia a decisao</div>
+
+  <div class="card">
+    <p>O modelo recebe <strong>38 informacoes</strong> sobre cada lead para tomar a decisao. Elas estao organizadas em 6 categorias. Cada feature tem um <strong>comportamento esperado</strong>: quando o valor e alto, o que isso indica sobre a maturidade do lead?</p>
+    <p class="muted" style="margin-top:8px">Regra geral: <strong style="color:#00B894">Verde = indica maturidade</strong> (lead tende a converter sozinho) | <span style="color:#E17055;font-weight:600">Laranja = indica necessidade de ajuda</span> (lead precisa de executivo)</p>
+  </div>
+
+  <!-- CATEGORIA 1: ENGAJAMENTO -->
+  <div class="cat-header">
+    <div class="cat-dot" style="background:var(--green)"></div>
+    <div class="cat-label" style="color:var(--green)">Engajamento com a Sofia</div>
+    <div class="cat-count">7 features — Como o lead interagiu no chat</div>
+  </div>
+
+  <div class="feat-grid">
+    <div class="feat-item engage">
+      <div class="feat-name">qtd_mensagens_lead</div>
+      <div class="feat-what"><strong>O que e:</strong> Quantas mensagens o lead enviou no chat com a Sofia naquele dia.</div>
+      <div class="feat-why">Por que importa: Leads que mandam mais mensagens estao mais engajados na conversa e tem maior interesse no produto.</div>
+      <div class="feat-behavior"><strong>Valor alto = mais maturidade.</strong> Lead engajado, ativo na conversa, fazendo perguntas. <span class="low"><strong>Valor baixo/zero</strong> = lead ignorou a Sofia ou deu respostas monossilabicas.</span></div>
+    </div>
+    <div class="feat-item engage">
+      <div class="feat-name">qtd_mensagens_sofia</div>
+      <div class="feat-what"><strong>O que e:</strong> Quantas mensagens a Sofia enviou para o lead naquele dia.</div>
+      <div class="feat-why">Por que importa: Mais mensagens da Sofia indica uma conversa mais longa e aprofundada — houve troca real.</div>
+      <div class="feat-behavior"><strong>Valor alto = conversa rica.</strong> A Sofia conseguiu manter o lead engajado e conduzir o atendimento. <span class="low"><strong>Valor baixo</strong> = conversa curta, lead desistiu rapido.</span></div>
+    </div>
+    <div class="feat-item engage">
+      <div class="feat-name">tempo_total_conversa_min</div>
+      <div class="feat-what"><strong>O que e:</strong> Duracao total da conversa em minutos naquele dia.</div>
+      <div class="feat-why">Por que importa: Uma conversa mais longa significa que o lead investiu tempo, o que indica interesse genuino.</div>
+      <div class="feat-behavior"><strong>Valor alto = lead investiu tempo.</strong> Conversas longas indicam interesse real no produto. <span class="low"><strong>Valor baixo</strong> = lead saiu rapido, pouco interesse.</span></div>
+    </div>
+    <div class="feat-item engage">
+      <div class="feat-name">tempo_medio_resposta_seg</div>
+      <div class="feat-what"><strong>O que e:</strong> Tempo medio (em segundos) que o lead demora para responder cada mensagem da Sofia.</div>
+      <div class="feat-why">Por que importa: Respostas rapidas indicam que o lead esta atento e engajado na conversa em tempo real.</div>
+      <div class="feat-behavior"><strong>Valor baixo = mais maturidade.</strong> Lead responde rapido, esta focado. <span class="low"><strong>Valor alto</strong> = lead demora pra responder, pode estar distraido ou pouco interessado.</span></div>
+    </div>
+    <div class="feat-item engage">
+      <div class="feat-name">qtd_sessoes_conversa</div>
+      <div class="feat-what"><strong>O que e:</strong> Quantas sessoes de conversa distintas o lead teve com a Sofia naquele dia.</div>
+      <div class="feat-why">Por que importa: Multiplas sessoes indicam que o lead <strong>voltou</strong> — saiu e retornou, o que demonstra interesse persistente.</div>
+      <div class="feat-behavior"><strong>Valor &gt; 1 = lead voltou.</strong> Interesse persistente — saiu e voltou pra conversar mais. <span class="low"><strong>Valor 1</strong> = sessao unica (neutro).</span></div>
+    </div>
+    <div class="feat-item engage">
+      <div class="feat-name">horario_primeira_msg</div>
+      <div class="feat-what"><strong>O que e:</strong> Hora do dia em que o lead mandou a primeira mensagem (ex: 14 = 14h).</div>
+      <div class="feat-why">Por que importa: O horario indica o perfil do lead. Leads que escrevem em horario comercial tendem a estar mais decididos.</div>
+      <div class="feat-behavior">Feature de <strong>contexto</strong> — nao tem direcao "melhor/pior", mas o modelo aprende padroes (ex: leads da manha podem ter perfil diferente dos da noite).</div>
+    </div>
+    <div class="feat-item engage">
+      <div class="feat-name">dia_semana</div>
+      <div class="feat-what"><strong>O que e:</strong> Dia da semana em que a interacao aconteceu (0=segunda, 6=domingo).</div>
+      <div class="feat-why">Por que importa: Alguns dias da semana tem padrao de conversao diferente (ex: segunda vs sabado).</div>
+      <div class="feat-behavior">Feature de <strong>contexto temporal</strong> — o modelo aprende quais dias tem melhor conversao historicamente.</div>
+    </div>
+  </div>
+
+  <!-- CATEGORIA 2: INTENCAO -->
+  <div class="cat-header">
+    <div class="cat-dot" style="background:var(--blue)"></div>
+    <div class="cat-label" style="color:var(--blue)">Sinais de Intencao</div>
+    <div class="cat-count">5 features — O que o lead disse ou perguntou</div>
+  </div>
+
+  <div class="feat-grid">
+    <div class="feat-item intent">
+      <div class="feat-name">perguntou_preco</div>
+      <div class="feat-what"><strong>O que e:</strong> Se o lead perguntou sobre preco/valores do Anota Ai (0 ou 1).</div>
+      <div class="feat-why">Por que importa: Perguntar preco e um forte sinal de intencao de compra — o lead esta considerando seriamente.</div>
+      <div class="feat-behavior"><strong>1 = forte sinal de maturidade.</strong> Lead esta na fase de avaliacao de compra. <span class="low"><strong>0</strong> = nao perguntou (pode estar so explorando).</span></div>
+    </div>
+    <div class="feat-item intent">
+      <div class="feat-name">perguntou_funcionalidade</div>
+      <div class="feat-what"><strong>O que e:</strong> Se o lead perguntou sobre funcionalidades do produto (0 ou 1).</div>
+      <div class="feat-why">Por que importa: Perguntas sobre funcionalidade indicam que o lead quer entender se o produto resolve o problema dele.</div>
+      <div class="feat-behavior"><strong>1 = interessado no produto.</strong> Esta avaliando se atende as necessidades. <span class="low"><strong>0</strong> = nao explorou o produto.</span></div>
+    </div>
+    <div class="feat-item intent">
+      <div class="feat-name">mencionou_concorrente</div>
+      <div class="feat-what"><strong>O que e:</strong> Se o lead mencionou algum concorrente durante a conversa (0 ou 1).</div>
+      <div class="feat-why">Por que importa: Sinal duplo. Pode indicar comparacao ativa (bom — lead pesquisando) ou resistencia (mau — "ja uso o concorrente").</div>
+      <div class="feat-behavior">Sinal <strong>ambiguo</strong> — o modelo aprende o contexto. Em geral, leads que comparam estao mais avancados no processo de decisao.</div>
+    </div>
+    <div class="feat-item intent">
+      <div class="feat-name">demonstrou_urgencia</div>
+      <div class="feat-what"><strong>O que e:</strong> Se o lead demonstrou urgencia na conversa (0 ou 1). Ex: "preciso pra essa semana", "quero comecar logo".</div>
+      <div class="feat-why">Por que importa: Urgencia e um dos sinais mais fortes de conversao — lead com prazo tende a fechar rapido.</div>
+      <div class="feat-behavior"><strong>1 = altissima maturidade.</strong> Lead tem timing definido e quer agir rapido. <span class="low"><strong>0</strong> = sem urgencia declarada.</span></div>
+    </div>
+    <div class="feat-item intent">
+      <div class="feat-name">ja_usa_delivery</div>
+      <div class="feat-what"><strong>O que e:</strong> Se o lead ja usa algum servico de delivery (0 ou 1).</div>
+      <div class="feat-why">Por que importa: Quem ja usa delivery entende o mercado e tem menos fricao para adotar o Anota Ai.</div>
+      <div class="feat-behavior"><strong>1 = mais maturidade.</strong> Lead familiarizado com delivery, adocao mais facil. <span class="low"><strong>0</strong> = novo no delivery, pode precisar de mais educacao.</span></div>
+    </div>
+  </div>
+
+  <!-- CATEGORIA 3: FUNIL -->
+  <div class="cat-header">
+    <div class="cat-dot" style="background:var(--purple)"></div>
+    <div class="cat-label" style="color:var(--purple)">Posicao no Funil</div>
+    <div class="cat-count">9 features — Onde o lead esta no processo</div>
+  </div>
+
+  <div class="feat-grid">
+    <div class="feat-item funnel">
+      <div class="feat-name">dia_no_fluxo</div>
+      <div class="feat-what"><strong>O que e:</strong> Ha quantos dias o lead esta na esteira (0, 1, 2, 3 ou 4). Feature <strong>fundamental</strong> — permite previsao diaria.</div>
+      <div class="feat-why">Por que importa: O comportamento do lead muda ao longo dos dias. Dia 0 tem muito engajamento, dia 3 quase nenhum.</div>
+      <div class="feat-behavior">Feature de <strong>contexto temporal</strong>. O modelo aprende que leads no dia 0 tem padroes diferentes dos do dia 3. Leads que ainda estao engajados nos dias 2-3 tem perfil especifico.</div>
+    </div>
+    <div class="feat-item funnel">
+      <div class="feat-name">prioridade_ordinal</div>
+      <div class="feat-what"><strong>O que e:</strong> Prioridade do lead na esteira (valor numerico que reflete a classificacao de prioridade).</div>
+      <div class="feat-why">Por que importa: Leads com prioridade mais alta tendem a ter perfil melhor ja na entrada.</div>
+      <div class="feat-behavior"><strong>Valor alto = lead prioritario.</strong> Modelo ja entra com vantagem de perfil.</div>
+    </div>
+    <div class="feat-item funnel">
+      <div class="feat-name">score_lead</div>
+      <div class="feat-what"><strong>O que e:</strong> Score de qualidade do lead na captacao (nota que o lead recebe ao entrar na base).</div>
+      <div class="feat-why">Por que importa: Leads com score alto tendem a converter mais, independente do canal. E uma proxy da qualidade do lead.</div>
+      <div class="feat-behavior"><strong>Valor alto = lead de melhor qualidade.</strong> Score da captacao ja indica potencial. <span class="low"><strong>Valor baixo</strong> = lead frio, pode precisar de mais trabalho.</span></div>
+    </div>
+    <div class="feat-item funnel">
+      <div class="feat-name">respondeu_primeira_msg</div>
+      <div class="feat-what"><strong>O que e:</strong> Se o lead respondeu a primeira mensagem da Sofia (0 ou 1).</div>
+      <div class="feat-why">Por que importa: Responder a primeira mensagem e o primeiro sinal de engajamento. Leads que ignoram a Sofia tem conversao muito baixa.</div>
+      <div class="feat-behavior"><strong>1 = sinal positivo.</strong> Lead abriu dialogo. <span class="low"><strong>0</strong> = ignorou a Sofia — sinal muito negativo.</span></div>
+    </div>
+    <div class="feat-item funnel">
+      <div class="feat-name">respondeu_qualificacao_base</div>
+      <div class="feat-what"><strong>O que e:</strong> Se o lead respondeu as perguntas de qualificacao basica (0 ou 1).</div>
+      <div class="feat-why">Por que importa: Passar pela qualificacao indica disposicao do lead em fornecer informacoes e seguir o processo.</div>
+      <div class="feat-behavior"><strong>1 = lead cooperativo.</strong> Disposicao a seguir o processo. <span class="low"><strong>0</strong> = resistente ou desistiu cedo.</span></div>
+    </div>
+    <div class="feat-item funnel">
+      <div class="feat-name">qtd_produtos</div>
+      <div class="feat-what"><strong>O que e:</strong> Quantidade de produtos que o lead demonstrou interesse.</div>
+      <div class="feat-why">Por que importa: Interesse em multiplos produtos indica lead mais engajado com o ecossistema.</div>
+      <div class="feat-behavior"><strong>Valor alto = interesse amplo.</strong> Lead explorando varias opcoes. <span class="low"><strong>1</strong> = interesse em produto unico (neutro).</span></div>
+    </div>
+    <div class="feat-item funnel">
+      <div class="feat-name">tentativas_contato_sofia</div>
+      <div class="feat-what"><strong>O que e:</strong> Quantas vezes a Sofia tentou contatar o lead.</div>
+      <div class="feat-why">Por que importa: Muitas tentativas sem resposta indicam lead desengajado.</div>
+      <div class="feat-behavior"><strong>Valor alto = sinal negativo.</strong> Sofia tentou varias vezes e lead nao respondeu. <span class="low">Lead pode estar indisponivel ou desinteressado.</span></div>
+    </div>
+    <div class="feat-item funnel">
+      <div class="feat-name">tempo_cadastro_interacao_min</div>
+      <div class="feat-what"><strong>O que e:</strong> Tempo (em minutos) entre o cadastro do lead e sua primeira interacao com a Sofia.</div>
+      <div class="feat-why">Por que importa: Leads que interagem rapidamente apos o cadastro estao mais "quentes".</div>
+      <div class="feat-behavior"><strong>Valor baixo = lead quente.</strong> Interagiu logo apos cadastrar. <span class="low"><strong>Valor alto</strong> = demorou para interagir, pode estar esfriando.</span></div>
+    </div>
+    <div class="feat-item funnel">
+      <div class="feat-name">teve_chat_no_dia</div>
+      <div class="feat-what"><strong>O que e:</strong> Se o lead teve alguma conversa com a Sofia naquele dia especifico (0 ou 1).</div>
+      <div class="feat-why">Por que importa: Leads que continuam conversando apos o dia 0 estao ativamente engajados.</div>
+      <div class="feat-behavior"><strong>1 no dia 2+ = muito positivo.</strong> Lead voltou para conversar. <span class="low"><strong>0</strong> = sem atividade naquele dia.</span></div>
+    </div>
+  </div>
+
+  <!-- CATEGORIA 4: EXTRAS DO LEAD -->
+  <div class="cat-header">
+    <div class="cat-dot" style="background:var(--gray)"></div>
+    <div class="cat-label">Perfil Fixo do Lead + Setup</div>
+    <div class="cat-count">5 features — Caracteristicas do estabelecimento</div>
+  </div>
+
+  <div class="feat-grid">
+    <div class="feat-item lead">
+      <div class="feat-name">pc_11_mais_flag</div>
+      <div class="feat-what"><strong>O que e:</strong> Se o lead esta em municipio com mais de 11 mil habitantes (proxy de porte da cidade).</div>
+      <div class="feat-why">Por que importa: Leads em cidades maiores tendem a ter mais demanda por delivery.</div>
+      <div class="feat-behavior">Feature de <strong>contexto</strong> — o modelo aprende padroes regionais de conversao.</div>
+    </div>
+    <div class="feat-item lead">
+      <div class="feat-name">tem_computador</div>
+      <div class="feat-what"><strong>O que e:</strong> Se o lead informou que tem computador (0 ou 1). Importante para o setup do Anota Ai.</div>
+      <div class="feat-why">Por que importa: Ter computador facilita o setup e a operacao do sistema.</div>
+      <div class="feat-behavior"><strong>1 = setup mais facil.</strong> <span class="low"><strong>0</strong> = pode precisar de mais suporte no setup.</span></div>
+    </div>
+    <div class="feat-item lead">
+      <div class="feat-name">link_pagamento_sofia</div>
+      <div class="feat-what"><strong>O que e:</strong> Se a Sofia enviou link de pagamento para o lead (0 ou 1).</div>
+      <div class="feat-why">Por que importa: Se chegou ao ponto de receber link de pagamento, o lead esta no final do funil.</div>
+      <div class="feat-behavior"><strong>1 = lead no final do funil.</strong> Ja recebeu proposta — forte sinal de conversao. <span class="low"><strong>0</strong> = nao chegou nessa etapa.</span></div>
+    </div>
+    <div class="feat-item lead">
+      <div class="feat-name">ddd_lead</div>
+      <div class="feat-what"><strong>O que e:</strong> DDD do telefone do lead (indica regiao do Brasil).</div>
+      <div class="feat-why">Por que importa: Diferentes regioes tem diferentes padroes de conversao e adocao de tecnologia.</div>
+      <div class="feat-behavior">Feature de <strong>contexto regional</strong> — o modelo aprende padroes geograficos.</div>
+    </div>
+    <div class="feat-item lead">
+      <div class="feat-name">culinaria_agrupada <span style="font-size:11px;color:#636e72;font-weight:400">(categorica)</span></div>
+      <div class="feat-what"><strong>O que e:</strong> Tipo de culinaria do estabelecimento (pizzaria, hamburgueria, acai, etc.).</div>
+      <div class="feat-why">Por que importa: Alguns tipos de culinaria se adaptam melhor ao delivery e convertem mais.</div>
+      <div class="feat-behavior">Feature de <strong>segmento</strong> — o modelo aprende quais segmentos culinarios tem maior propensao a converter por self.</div>
+    </div>
+  </div>
+
+  <!-- CATEGORIA 5: TRAVAMENTO -->
+  <div class="cat-header">
+    <div class="cat-dot" style="background:var(--orange)"></div>
+    <div class="cat-label" style="color:var(--orange)">Sinais de Travamento</div>
+    <div class="cat-count">9 features — Fricoes na conversa com a Sofia</div>
+  </div>
+
+  <div class="feat-grid">
+    <div class="feat-item block">
+      <div class="feat-name">lead_pediu_humano</div>
+      <div class="feat-what"><strong>O que e:</strong> Se o lead pediu para falar com um humano durante a conversa (0 ou 1).</div>
+      <div class="feat-why">Por que importa: <strong>Sinal mais forte de necessidade de executivo.</strong> Lead explicitamente diz que a Sofia nao esta resolvendo.</div>
+      <div class="feat-behavior"><span class="low"><strong>1 = forte sinal de transbordo.</strong> Lead pediu ajuda humana explicitamente.</span> <strong>0</strong> = nao pediu (positivo — Sofia esta dando conta).</div>
+    </div>
+    <div class="feat-item block">
+      <div class="feat-name">sofia_nao_resolveu</div>
+      <div class="feat-what"><strong>O que e:</strong> Se a Sofia nao conseguiu resolver a demanda do lead (0 ou 1).</div>
+      <div class="feat-why">Por que importa: Indica que o lead tem uma necessidade que vai alem da capacidade da Sofia.</div>
+      <div class="feat-behavior"><span class="low"><strong>1 = precisa de humano.</strong> Sofia atingiu seu limite.</span> <strong>0</strong> = Sofia conseguiu conduzir a conversa.</div>
+    </div>
+    <div class="feat-item block">
+      <div class="feat-name">houve_handoff</div>
+      <div class="feat-what"><strong>O que e:</strong> Se ja houve transferencia para humano naquele dia (0 ou 1).</div>
+      <div class="feat-why">Por que importa: Se ja houve handoff, o lead ja demonstrou que precisa de apoio humano.</div>
+      <div class="feat-behavior"><span class="low"><strong>1 = sinal de transbordo.</strong> Ja foi transferido uma vez.</span></div>
+    </div>
+    <div class="feat-item block">
+      <div class="feat-name">handoff_inbound</div>
+      <div class="feat-what"><strong>O que e:</strong> Se houve handoff especificamente para o canal inbound (0 ou 1).</div>
+      <div class="feat-why">Por que importa: Detalha o tipo de transferencia — inbound indica que o lead entrou no fluxo comercial.</div>
+      <div class="feat-behavior">Similar ao handoff geral, mas especifico para o canal inbound.</div>
+    </div>
+    <div class="feat-item block">
+      <div class="feat-name">objecoes_levantadas</div>
+      <div class="feat-what"><strong>O que e:</strong> Numero total de objecoes que o lead levantou na conversa.</div>
+      <div class="feat-why">Por que importa: Muitas objecoes indicam resistencia — o lead tem duvidas que a Sofia pode nao estar conseguindo superar.</div>
+      <div class="feat-behavior"><span class="low"><strong>Valor alto = resistencia.</strong> Quanto mais objecoes, mais o lead precisa de um humano persuasivo.</span> <strong>0</strong> = nenhuma objecao (positivo).</div>
+    </div>
+    <div class="feat-item block">
+      <div class="feat-name">objecao_preco / objecao_confianca / objecao_funcionalidade / objecao_timing</div>
+      <div class="feat-what"><strong>O que sao:</strong> Flags (0 ou 1) para cada tipo especifico de objecao levantada pelo lead.</div>
+      <div class="feat-why">Por que importam: Objecoes de preco e confianca costumam ser mais dificeis de resolver por bot — frequentemente precisam de humano.</div>
+      <div class="feat-behavior"><span class="low"><strong>1 = objecao especifica ativa.</strong></span> Objecao de <strong>preco</strong> e <strong>confianca</strong> sao os sinais mais fortes de necessidade de humano. Objecao de <strong>funcionalidade</strong> e <strong>timing</strong> podem ser resolvidas pela Sofia.</div>
+    </div>
+    <div class="feat-item block">
+      <div class="feat-name">sentimento_negativo</div>
+      <div class="feat-what"><strong>O que e:</strong> Se o lead demonstrou sentimento negativo na conversa (0 ou 1). Ex: frustrado, irritado, insatisfeito.</div>
+      <div class="feat-why">Por que importa: Lead com sentimento negativo precisa de um humano empatico para nao perder o deal.</div>
+      <div class="feat-behavior"><span class="low"><strong>1 = lead frustrado.</strong> Risco alto de perda — precisa de humano urgente.</span> <strong>0</strong> = sentimento neutro ou positivo.</div>
+    </div>
+    <div class="feat-item block">
+      <div class="feat-name">qtd_fallbacks_bot</div>
+      <div class="feat-what"><strong>O que e:</strong> Quantas vezes a Sofia deu "fallback" — respostas genericas quando nao entendeu a pergunta do lead.</div>
+      <div class="feat-why">Por que importa: Muitos fallbacks indicam que a Sofia nao esta conseguindo atender o lead, gerando frustacao.</div>
+      <div class="feat-behavior"><span class="low"><strong>Valor alto = Sofia travada.</strong> Nao consegue entender ou responder o lead.</span> <strong>0</strong> = nenhum fallback (conversa fluida).</div>
+    </div>
+  </div>
+
+  <!-- CATEGORIA 6: ORIGEM -->
+  <div class="cat-header">
+    <div class="cat-dot" style="background:#0984E3"></div>
+    <div class="cat-label" style="color:#0984E3">Origem e Canal</div>
+    <div class="cat-count">3 features categoricas — De onde o lead veio</div>
+  </div>
+
+  <div class="feat-grid">
+    <div class="feat-item" style="border-left-color:#0984E3">
+      <div class="feat-name">origem_agrupada <span style="font-size:11px;color:#636e72;font-weight:400">(categorica)</span></div>
+      <div class="feat-what"><strong>O que e:</strong> Canal de marketing de origem do lead (agrupado). Ex: organico, pago, indicacao.</div>
+      <div class="feat-why">Por que importa: Leads de origens diferentes tem perfis de conversao distintos.</div>
+      <div class="feat-behavior">Feature de <strong>segmentacao</strong> — o modelo aprende quais canais geram leads mais autonomos.</div>
+    </div>
+    <div class="feat-item" style="border-left-color:#0984E3">
+      <div class="feat-name">site_origem <span style="font-size:11px;color:#636e72;font-weight:400">(categorica)</span></div>
+      <div class="feat-what"><strong>O que e:</strong> Site ou pagina especifica onde o lead clicou o CTA de entrada. Ex: "Whatsapp Live Chat", "Trial Anota AI", "Form nativo Meta".</div>
+      <div class="feat-why">Por que importa: Diferentes pontos de entrada geram leads com diferentes niveis de maturidade. Whatsapp Live Chat tem 28.6% de conversao, enquanto Form nativo Meta tem 9.7%.</div>
+      <div class="feat-behavior">Feature muito <strong>discriminativa</strong> — o modelo aprende que leads vindos de <strong>Whatsapp</strong> tem alta maturidade (28-36% conv) enquanto leads de <strong>Form Meta</strong> precisam de mais apoio (9.7% conv).</div>
+    </div>
+    <div class="feat-item" style="border-left-color:#0984E3">
+      <div class="feat-name">source <span style="font-size:11px;color:#636e72;font-weight:400">(categorica)</span></div>
+      <div class="feat-what"><strong>O que e:</strong> Fonte/canal no sistema (ex: SELF, SOFIA, SF INBOUND). Indica por qual via o lead foi registrado.</div>
+      <div class="feat-why">Por que importa: Leads que ja vieram com tag comercial (SF INBOUND) podem ter perfil diferente de leads Self.</div>
+      <div class="feat-behavior">Feature de <strong>contexto de canal</strong>. O modelo aprende os padroes por fonte.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 5. ALTA MATURIDADE -->
+<!-- ============================================================ -->
+<div class="section" id="maturidade">
+  <div class="section-title">5. Como definimos "Alta Maturidade"</div>
+  <div class="section-desc">O que significa um lead ter alta maturidade e como o modelo chega nessa conclusao</div>
+
+  <div class="card">
+    <h3>O que e "Alta Maturidade"?</h3>
+    <p>Um lead de <strong>alta maturidade</strong> e aquele que tem alta probabilidade de <strong>converter sem a intervencao de um executivo comercial</strong>. Isso nao significa que ele converte sozinho em 100% dos casos — significa que ele tem perfil, engajamento e comportamento que indicam que ele <strong>nao precisa</strong> de um humano para fechar.</p>
+
+    <div class="callout green" style="margin-top:16px">
+      <span class="icon">&#128161;</span>
+      <div><strong>Importante:</strong> "Alta maturidade" nao e uma classificacao manual ou regra de negocio definida por nos. E o <strong>resultado da combinacao das 38 features pelo modelo</strong>. O LightGBM aprende, a partir dos dados historicos, quais combinacoes de variaveis resultam em conversao sem executivo.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Perfil tipico de um lead de alta maturidade</h3>
+    <p class="muted">Com base na feature importance e nos padroes aprendidos pelo modelo:</p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px">
+      <div style="background:#F0FFF4;border-radius:10px;padding:18px;border-left:4px solid #00B894">
+        <div style="font-size:13px;font-weight:700;color:#00B894;margin-bottom:8px">Engajamento</div>
+        <div style="font-size:13px;color:#2D3436;line-height:1.8">
+          Enviou varias mensagens para a Sofia. Conversa longa (>5 min). Respondeu rapido. Voltou para mais de uma sessao.
+        </div>
+      </div>
+      <div style="background:#EBF5FF;border-radius:10px;padding:18px;border-left:4px solid #0984E3">
+        <div style="font-size:13px;font-weight:700;color:#0984E3;margin-bottom:8px">Intencao</div>
+        <div style="font-size:13px;color:#2D3436;line-height:1.8">
+          Perguntou preco. Perguntou sobre funcionalidades. Demonstrou urgencia. Ja usa delivery.
+        </div>
+      </div>
+      <div style="background:#F8F5FF;border-radius:10px;padding:18px;border-left:4px solid #6C5CE7">
+        <div style="font-size:13px;font-weight:700;color:#6C5CE7;margin-bottom:8px">Funil</div>
+        <div style="font-size:13px;color:#2D3436;line-height:1.8">
+          Score alto na captacao. Respondeu a primeira mensagem. Passou pela qualificacao. Recebeu link de pagamento.
+        </div>
+      </div>
+      <div style="background:#F5F6FA;border-radius:10px;padding:18px;border-left:4px solid #636E72">
+        <div style="font-size:13px;font-weight:700;color:#636E72;margin-bottom:8px">Ausencia de Travamento</div>
+        <div style="font-size:13px;color:#2D3436;line-height:1.8">
+          <strong>Nao</strong> pediu humano. <strong>Nenhuma</strong> objecao forte. Sem sentimento negativo. Poucos ou nenhum fallback da Sofia.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Como o modelo define "alta maturidade" na pratica</h3>
+    <p>O modelo <strong>nao</strong> usa uma regra fixa tipo "se mandou >5 mensagens E perguntou preco, entao e maduro". Em vez disso, ele combina todas as 38 features de forma nao-linear e atribui um <strong>score continuo de 0 a 1</strong>.</p>
+
+    <div style="margin-top:16px">
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:12px">
+        <div style="width:60px;text-align:center">
+          <div style="font-size:20px;font-weight:800;color:#E17055">0.05</div>
+          <div style="font-size:10px;color:#636E72">Score</div>
+        </div>
+        <div style="flex:1;background:#FFF5F5;border-radius:8px;padding:10px 14px;font-size:13px">
+          Lead ignorou a Sofia, nao respondeu, zero engajamento. <strong>Transbordo imediato.</strong>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:12px">
+        <div style="width:60px;text-align:center">
+          <div style="font-size:20px;font-weight:800;color:#FDCB6E">0.15</div>
+          <div style="font-size:10px;color:#636E72">Score</div>
+        </div>
+        <div style="flex:1;background:#FFF9E6;border-radius:8px;padding:10px 14px;font-size:13px">
+          Lead conversou um pouco mas pediu humano e levantou objecao de preco. <strong>Transbordo.</strong>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:12px">
+        <div style="width:60px;text-align:center">
+          <div style="font-size:20px;font-weight:800;color:#0984E3">0.30</div>
+          <div style="font-size:10px;color:#636E72">Score</div>
+        </div>
+        <div style="flex:1;background:#EBF5FF;border-radius:8px;padding:10px 14px;font-size:13px">
+          Lead engajou bem, perguntou preco, sem objecoes fortes, score alto de captacao. <strong>Represado — alta maturidade.</strong>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:16px">
+        <div style="width:60px;text-align:center">
+          <div style="font-size:20px;font-weight:800;color:#00B894">0.65</div>
+          <div style="font-size:10px;color:#636E72">Score</div>
+        </div>
+        <div style="flex:1;background:#F0FFF4;border-radius:8px;padding:10px 14px;font-size:13px">
+          Lead super engajado, perguntou preco e funcionalidade, urgencia, ja usa delivery, recebeu link de pagamento. <strong>Altissima maturidade — convertera quase certamente por Self.</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 6. THRESHOLD -->
+<!-- ============================================================ -->
+<div class="section" id="threshold">
+  <div class="section-title">6. Threshold — O ponto de corte</div>
+  <div class="section-desc">Como o modelo decide o limite entre represado e transbordo</div>
+
+  <div class="threshold-visual">
+    <h3 style="margin-bottom:8px">Como funciona o ponto de corte</h3>
+    <p style="font-size:14px;color:var(--gray);margin-bottom:16px">O modelo atribui um score de 0 a 1 para cada lead. O <strong>threshold</strong> e o ponto de corte que divide: acima = represado, abaixo = transbordo.</p>
+
+    <div style="position:relative;margin:24px 0 40px">
+      <div class="score-bar">
+        <div class="seg" style="width:20%;background:#E17055;border-radius:10px 0 0 10px">0.0 - 0.20</div>
+        <div class="seg" style="width:40%;background:linear-gradient(90deg, #E17055, #00B894)">Zona de decisao</div>
+        <div class="seg" style="width:40%;background:#00B894;border-radius:0 10px 10px 0">0.60 - 1.0</div>
+      </div>
+      <div class="score-marker" style="left:40%">
+        <div class="score-marker-label">Threshold (P60)</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div style="background:#FFF5F5;border:1px solid #E17055;border-radius:10px;padding:16px;text-align:center">
+        <div style="font-size:14px;font-weight:700;color:#E17055">Score &lt; Threshold</div>
+        <div style="font-size:24px;font-weight:800;color:#E17055;margin:8px 0">TRANSBORDO</div>
+        <div style="font-size:13px;color:#636E72">60% dos leads (2.525 no backtest)</div>
+        <div style="font-size:13px;color:#636E72">Conversao: <strong>0.0%</strong></div>
+      </div>
+      <div style="background:#F0FFF4;border:1px solid #00B894;border-radius:10px;padding:16px;text-align:center">
+        <div style="font-size:14px;font-weight:700;color:#00B894">Score &ge; Threshold</div>
+        <div style="font-size:24px;font-weight:800;color:#00B894;margin:8px 0">REPRESADO</div>
+        <div style="font-size:13px;color:#636E72">40% dos leads (1.684 no backtest)</div>
+        <div style="font-size:13px;color:#636E72">Conversao: <strong>22.6%</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Calibragem automatica via Percentil P60</h3>
+    <p>O threshold nao e um numero fixo definido manualmente. Ele e <strong>calibrado automaticamente</strong> usando o percentil P60 dos scores do dia 1 de cada lead.</p>
+    <p style="margin-top:10px"><strong>O que isso significa:</strong> Pegamos todos os scores dos leads no dia 1, ordenamos do menor para o maior, e o ponto que divide os 60% mais baixos dos 40% mais altos vira o threshold.</p>
+    <p style="margin-top:10px" class="muted">Isso garante que o threshold se <strong>auto-ajusta</strong> conforme o perfil dos leads muda ao longo do tempo — se os leads ficarem "melhores" ou "piores" em media, o corte acompanha.</p>
+
+    <div class="callout yellow" style="margin-top:16px">
+      <span class="icon">&#9881;</span>
+      <div><strong>Referencia Diana (Yuri Laranja):</strong> O modelo Diana do iFood usa threshold fixo de 0.20. Optamos pelo P60 porque nosso volume de interacoes cai rapidamente (100% dia 0 → ~2% dia 4), entao a calibragem dinamica se adapta melhor ao nosso cenario.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 7. FLUXO COMPLETO -->
+<!-- ============================================================ -->
+<div class="section" id="fluxo">
+  <div class="section-title">7. Fluxo Completo do Represamento Inteligente</div>
+  <div class="section-desc">Passo a passo de como o modelo atua na operacao</div>
+
+  <div class="card" style="padding:32px">
+    <div class="vflow">
+
+      <!-- DIA 0 -->
+      <div class="vflow-node" style="background:var(--purple);color:white;border-radius:24px">
+        DIA 0 — Lead entra na esteira
+        <div class="vflow-detail">100% dos leads passam pela Sofia | Primeiro contato</div>
+      </div>
+      <div class="vflow-arrow"></div>
+
+      <!-- COLETA -->
+      <div class="vflow-node" style="background:#DFE6E9;color:var(--dark)">
+        Sofia conversa com o lead e coleta as 38 features
+        <div class="vflow-detail">Mensagens, intencao, objecoes, tempo de resposta, engajamento...</div>
+      </div>
+      <div class="vflow-arrow"></div>
+
+      <!-- DIA 1: SCORING -->
+      <div class="vflow-node" style="background:#FFEAA7;color:var(--dark);border:2px solid #FDCB6E">
+        DIA 1 — Modelo ML pontua o lead
+        <div class="vflow-detail">LightGBM analisa as features e gera score de 0 a 1</div>
+      </div>
+      <div class="vflow-arrow"></div>
+
+      <!-- SPLIT -->
+      <div class="vflow-split">
+        <div class="vflow-branch">
+          <div class="vflow-branch-label" style="color:var(--orange)">Score &lt; threshold (60%)</div>
+          <div class="vflow-node" style="background:var(--orange);color:white">
+            TRANSBORDO DIA 1
+            <div class="vflow-detail">2.525 leads → comercial imediato</div>
+          </div>
+          <div style="background:#FFF5F5;border:1px solid var(--orange);border-radius:10px;padding:14px;text-align:center;width:100%">
+            <div style="font-size:28px;font-weight:800;color:var(--orange)">0.0% conv</div>
+            <div style="font-size:12px;color:#636E72;margin-top:4px">Nenhuma conversao — modelo acerta ao enviar pro comercial</div>
+          </div>
+          <div style="background:#FFF9E6;border:1px solid #FDCB6E;border-radius:10px;padding:14px;text-align:center;width:100%;font-size:13px">
+            <strong>Ganho:</strong> comercial recebe leads <strong>+3 dias antes</strong> do processo atual
+          </div>
+        </div>
+
+        <div class="vflow-branch">
+          <div class="vflow-branch-label" style="color:var(--green)">Score &ge; threshold (40%)</div>
+          <div class="vflow-node" style="background:var(--green);color:white">
+            REPRESADO — Alta maturidade
+            <div class="vflow-detail">1.684 leads ficam sem executivo</div>
+          </div>
+          <div style="background:#F0FFF4;border:1px solid var(--green);border-radius:10px;padding:14px;text-align:center;width:100%">
+            <div style="font-size:11px;color:#636E72;text-transform:uppercase">Dias 1-3: mais tempo pra Self e Sofia</div>
+            <div style="font-size:28px;font-weight:800;color:var(--green);margin-top:4px">22.6% conv</div>
+            <div style="font-size:12px;color:#636E72;margin-top:4px">381 conv | 47% sem executivo</div>
+          </div>
+          <div class="vflow-node" style="background:var(--blue);color:white;margin-top:8px">
+            DIA 4 — Transbordo obrigatorio
+            <div class="vflow-detail">1.303 nao convertidos → comercial</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="callout blue">
+    <span class="icon">&#128337;</span>
+    <div><strong>Por que dia 4?</strong> O volume de interacoes da Sofia cai drasticamente apos o dia 0 (100% → 45% → 12% → 5% → 2%). No dia 4, praticamente nao ha mais interacao — se o lead nao converteu por Self ate ai, nao vai converter sozinho. E o momento certo de enviar pro comercial.</div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 8. RESULTADOS -->
+<!-- ============================================================ -->
+<div class="section" id="resultados">
+  <div class="section-title">8. Resultados do Backtest</div>
+  <div class="section-desc">Numeros do backtest com 4.209 leads historicos reais</div>
+
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="num" style="color:var(--green)">22.6%</div>
+      <div class="lbl">Conv Represado</div>
+    </div>
+    <div class="kpi">
+      <div class="num" style="color:var(--orange)">0.0%</div>
+      <div class="lbl">Conv Transbordo</div>
+    </div>
+    <div class="kpi">
+      <div class="num" style="color:var(--red)">&infin;</div>
+      <div class="lbl">Lift</div>
+    </div>
+    <div class="kpi">
+      <div class="num" style="color:var(--blue)">0.895</div>
+      <div class="lbl">AUC-ROC</div>
+    </div>
+    <div class="kpi">
+      <div class="num" style="color:var(--purple)">47.0%</div>
+      <div class="lbl">Sem Executivo</div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="card" style="border-top:4px solid var(--green)">
+      <h3 style="color:var(--green)">Grupo Represado — 1.684 leads (40%)</h3>
+      <p>381 converteram (22.6%):</p>
+      <div style="display:flex;gap:8px;margin:12px 0">
+        <div style="flex:1;background:#FFF5F5;border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:20px;font-weight:800;color:var(--orange)">202</div>
+          <div style="font-size:11px;color:#636E72">Comercial (53%)</div>
+        </div>
+        <div style="flex:1;background:#F0FFF4;border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:20px;font-weight:800;color:var(--green)">130</div>
+          <div style="font-size:11px;color:#636E72">Self (34.1%)</div>
+        </div>
+        <div style="flex:1;background:#F8F5FF;border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:20px;font-weight:800;color:var(--purple)">49</div>
+          <div style="font-size:11px;color:#636E72">Sofia (12.9%)</div>
+        </div>
+      </div>
+      <p class="muted">179 conversoes (47%) acontecem sem executivo. O potencial esta em dar mais tempo pra Self e Sofia atuarem antes do comercial entrar.</p>
+    </div>
+
+    <div class="card" style="border-top:4px solid var(--orange)">
+      <h3 style="color:var(--orange)">Grupo Transbordo — 2.525 leads (60%)</h3>
+      <p><strong>Zero conversoes</strong> — separacao perfeita.</p>
+      <div style="text-align:center;padding:20px">
+        <div style="font-size:48px;font-weight:800;color:var(--orange)">0</div>
+        <div style="font-size:14px;color:#636E72">conversoes em 2.525 leads</div>
+      </div>
+      <p class="muted">Nenhum lead do grupo transbordo converte — nem por Self, nem por Sofia, nem por Comercial. O modelo acerta 100% ao identificar leads que precisam de ajuda humana.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>O que significa AUC-ROC de 0.895?</h3>
+    <p>AUC-ROC (Area Under the Receiver Operating Characteristic Curve) e a principal metrica para avaliar modelos de classificacao. Vai de 0.5 (aleatorio, como jogar moeda) a 1.0 (perfeito).</p>
+    <div style="display:flex;align-items:center;gap:0;margin:20px 0;height:36px;border-radius:8px;overflow:hidden;position:relative">
+      <div style="width:50%;background:#E17055;display:flex;align-items:center;justify-content:center;color:white;font-size:12px;font-weight:700">0.5 — Aleatorio</div>
+      <div style="width:20%;background:#FDCB6E;display:flex;align-items:center;justify-content:center;color:var(--dark);font-size:12px;font-weight:700">0.7 — OK</div>
+      <div style="width:10%;background:#74B9FF;display:flex;align-items:center;justify-content:center;color:white;font-size:12px;font-weight:700">0.8</div>
+      <div style="width:10%;background:#00B894;display:flex;align-items:center;justify-content:center;color:white;font-size:12px;font-weight:700">0.9</div>
+      <div style="width:10%;background:#00B894;display:flex;align-items:center;justify-content:center;color:white;font-size:12px;font-weight:700">1.0</div>
+      <div style="position:absolute;left:89.5%;top:-8px;height:calc(100% + 16px);width:3px;background:var(--red);border-radius:2px"></div>
+      <div style="position:absolute;left:89.5%;top:-24px;transform:translateX(-50%);font-size:11px;font-weight:800;color:var(--red);white-space:nowrap">Nosso: 0.895</div>
+    </div>
+    <p class="muted" style="margin-top:12px"><strong>0.895 e considerado excelente.</strong> Significa que, se pegarmos um lead que converteu e um que nao converteu aleatoriamente, em ~90% das vezes o modelo dara score mais alto para o que converteu. Para contexto, a referencia do Yuri Laranja (modelo Diana) tem performance similar.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 9. PROXIMOS PASSOS -->
+<!-- ============================================================ -->
+<div class="section" id="proximos">
+  <div class="section-title">9. O que precisa do Time de Produto</div>
+  <div class="section-desc">Proximos passos para colocar o modelo em producao</div>
+
+  <div class="card" style="border-left:4px solid var(--red)">
+    <h3 style="color:var(--red)">Passo 1: Integracao Salesforce (flag no Moskit)</h3>
+    <p>O modelo ja roda no Databricks e gera um CSV diario com <strong>deal_id + score + decisao (represar/transbordar)</strong>. O que falta e <strong>conectar essa informacao ao fluxo operacional</strong>.</p>
+    <p style="margin-top:10px"><strong>O que precisa:</strong></p>
+    <p>1. Criar uma flag no Salesforce/Moskit: <code style="background:#F5F6FA;padding:2px 8px;border-radius:4px">alocar_executivo</code> (sim/nao)</p>
+    <p>2. Job diario no Databricks gera tabela com deal_id + flag</p>
+    <p>3. Moskit/SF le a flag e decide se aloca executivo ou nao</p>
+    <p>4. Quem tem flag = "nao" fica represado; flag = "sim" vai pro comercial</p>
+
+    <div class="callout yellow" style="margin-top:12px">
+      <span class="icon">&#128268;</span>
+      <div><strong>Referencia Diana:</strong> O Yuri criou a flag <code>inbound_allocation_flag</code> no SF do iFood. Podemos seguir o mesmo padrao. Yuri ofereceu suporte e conexao com time de Engenharia.</div>
+    </div>
+  </div>
+
+  <div class="card" style="border-left:4px solid var(--blue)">
+    <h3 style="color:var(--blue)">Passo 2: Teste A/B</h3>
+    <p>Antes de escalar para 100%, precisamos validar em producao com um teste controlado.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+      <div style="background:#F5F6FA;border-radius:8px;padding:14px">
+        <div style="font-size:13px;font-weight:700;color:var(--blue)">Grupo teste (20%)</div>
+        <div style="font-size:12px;color:#636E72;margin-top:4px">Leads com decisao do modelo (represamento inteligente)</div>
+      </div>
+      <div style="background:#F5F6FA;border-radius:8px;padding:14px">
+        <div style="font-size:13px;font-weight:700;color:#636E72">Grupo controle (80%)</div>
+        <div style="font-size:12px;color:#636E72;margin-top:4px">Leads com regras atuais (24h represado, depois todos pro comercial)</div>
+      </div>
+    </div>
+    <p style="margin-top:12px"><strong>Metricas de sucesso:</strong></p>
+    <p class="muted">1. <strong>Conversao global nao pode cair</strong> — principal guardrail</p>
+    <p class="muted">2. <strong>Share self deve aumentar</strong> — de ~61% para proximo de 96%</p>
+    <p class="muted">3. <strong>Duracao estimada:</strong> ~1.5 mes (referencia Yuri, modelo Diana)</p>
+  </div>
+
+  <div class="card" style="border-left:4px solid var(--green)">
+    <h3 style="color:var(--green)">Passo 3: Escalar e Monitorar</h3>
+    <p>Se o teste A/B validar: escalar para 100% da base e estabelecer monitoramento continuo.</p>
+    <p class="muted" style="margin-top:8px">Re-treino periodico do modelo com dados atualizados para manter a performance ao longo do tempo.</p>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  Handoff Sofia ML v9 — Documento tecnico para o Time de Produto | Kevilyn Berato | Junho 2026 | Anota Ai (iFood)
+</div>
+
+</div>
+
+<!-- SMOOTH SCROLL -->
+<script>
+document.querySelectorAll('.nav a, .toc a').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    const target = document.querySelector(a.getAttribute('href'));
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+
+// Active nav
+const sections = document.querySelectorAll('.section[id]');
+const navLinks = document.querySelectorAll('.nav a');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => {
+    if (window.scrollY >= s.offsetTop - 80) current = s.id;
+  });
+  navLinks.forEach(l => {
+    l.classList.remove('active');
+    if (l.getAttribute('href') === '#' + current) l.classList.add('active');
+  });
+});
+</script>
+
+</body>
+</html>
